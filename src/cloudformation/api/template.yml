@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: "STC MyIR Link Server Template Format"
+
+Parameters:
+  EnvironmentType:
+    Description: The environment type
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - qa
+      - staging
+      - prod
+    ConstraintDescription: must be a dev, qa, staging or prod
+  S3STCAuthBucket:
+    Description: S3 Bucket to store the MyIR-Link artifacts generated during the pipeline
+    Type: String
+
+Resources:
+  CloudWatchRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns:
+        - >-
+          arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+  Account:
+    Type: "AWS::ApiGateway::Account"
+    DependsOn: [Api]
+    Properties:
+      CloudWatchRoleArn: !GetAtt
+        - CloudWatchRole
+        - Arn
+  Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "stc-MyIR-Link-api-${EnvironmentType}"
+      Description: "Link API to access MyIR from STC Partners Apps"
+      Cors: "'*'"
+      TracingEnabled: true
+      EndpointConfiguration:
+        Type: "REGIONAL"
+      StageName: !Ref EnvironmentType
+      DefinitionBody:
+        "Fn::Transform":
+          Name: "AWS::Include"
+          Parameters:
+            Location: !Sub s3://${S3STCAuthBucket}/openapi.yml
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          CacheDataEncrypted: false
+          CachingEnabled: false
+          DataTraceEnabled: true
+          LoggingLevel: INFO
+          MetricsEnabled: true
+  TestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../lambda/test/get
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Test:
+          Type: Api
+          Properties:
+            Path: /test
+            Method: get
+            RestApiId:
+              Ref: Api
+            Auth:
+              Authorizer: NONE
+  AccountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../lambda/account/post
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Account:
+          Type: Api
+          Properties:
+            Path: /account
+            Method: post
+            RestApiId:
+              Ref: Api
+            Auth:
+              Authorizer: NONE
+  ClientFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../lambda/client/post
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Client:
+          Type: Api
+          Properties:
+            Path: /client
+            Method: post
+            RestApiId:
+              Ref: Api
+            Auth:
+              Authorizer: NONE
+  ConsentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../lambda/consent/post
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Consent:
+          Type: Api
+          Properties:
+            Path: /consent
+            Method: post
+            RestApiId:
+              Ref: Api
+            Auth:
+              Authorizer: NONE
+  MatchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../../lambda/match/get
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Events:
+        Match:
+          Type: Api
+          Properties:
+            Path: /match
+            Method: get
+            RestApiId:
+              Ref: Api
+            Auth:
+              Authorizer: NONE
+  ClientTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${EnvironmentType}-Client
+      AttributeDefinitions:
+        - AttributeName: ClientId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ClientId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1

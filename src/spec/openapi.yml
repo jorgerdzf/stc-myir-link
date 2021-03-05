@@ -1,0 +1,221 @@
+openapi: 3.0.0
+info:
+  title: STC MyIR Link API
+  description: STChealth MyIR Link API for signing, account creation, immunization records matching and consent of sharing info with STC Partners
+  version: 0.0.1
+
+paths:
+  /account:
+    post:
+      tags:
+        - MyIR Lite API
+      description: Creates a new MyIR Account
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewUser"
+        required: true
+      responses:
+        "200":
+          description: 200 ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserId"
+        "400":
+          description: 400 bad request
+        "401":
+          description: 401 unauthorized
+        "500":
+          description: 500 unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /match:
+    get:
+      tags:
+        - MyIR Lite API
+      description: Match MyIR records with the state Registry
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: string
+            example: 61864fb3-1cb5-4d23-9a4b-98819eeed235
+        - in: query
+          name: stateCode
+          schema:
+            type: string
+            example: LA
+      responses:
+        "200":
+          description: 200 ok
+        "400":
+          description: 400 bad request
+        "401":
+          description: 401 unauthorized
+        "404":
+          description: 401 not found
+        "500":
+          description: 500 unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /consent:
+    post:
+      tags:
+        - MyIR Lite API
+      description: Confirm consent of sharing MyIR information with a partner application
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserId"
+        required: true
+      responses:
+        "200":
+          description: 200 ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsentResponse"
+        "400":
+          description: 400 bad request
+        "401":
+          description: 401 unauthorized
+        "500":
+          description: 500 unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+  /client:
+    post:
+      tags:
+        - Consumer Client Registration
+      description: Register a new client (partner) in the database
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Client"
+        required: true
+      responses:
+        "200":
+          description: 200 ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientResponse"
+        "400":
+          description: 400 bad request
+        "401":
+          description: 401 unauthorized
+        "500":
+          description: 500 unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+components:
+  schemas:
+    NewUser:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: johnd@email.com
+        password:
+          type: string
+          example: InR5cCI6IkpXVCJ9eyJuYW1lIjoiSm9obiBEb2UiLCJlbWFpb
+        gender:
+          type: string
+          example: Male
+        birth:
+          type: string
+          example: "06/12/1976"
+        phone:
+          type: string
+          example: 6184805426
+        address:
+          type: string
+          example: 10001 Gil Jr Lane, Houston, Texas, 77075
+    UserId:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: 61864fb3-1cb5-4d23-9a4b-98819eeed235
+    ConsentResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: The access token value.
+          example: eyJhbGciO
+        state:
+          type: string
+          description: The state of the application
+          example: iSm9obiBE
+    Client:
+      type: object
+      properties:
+        client_name:
+          type: string
+          example: CLEAR
+        app_name:
+          type: string
+          example: Health Pass App
+        app_description:
+          type: string
+          example: Mobile app to get personal health certificates on demand
+        icon_image_url:
+          type: string
+          example: "s3://stc/consumernetwork/client/assets/clear.png"
+        valid_uris:
+          type: array
+          items:
+            type: string
+    ClientResponse:
+      type: object
+      properties:
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        api_key:
+          type: string
+        secret_key:
+          type: string
+    ErrorDetail:
+      type: object
+      properties:
+        code:
+          title: Error Code
+          type: integer
+          description: API Specific Error Code
+          example: 5001
+        message:
+          title: Error Message
+          type: string
+          description: Detailed Error Message
+          example: "An error ocurred when trying to connect to the database"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
