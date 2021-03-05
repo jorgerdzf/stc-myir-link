@@ -43,7 +43,7 @@ Resources:
   Api:
     Type: AWS::Serverless::Api
     Properties:
-      Name: !Sub "stc-MyIR-Link-api-${EnvironmentType}"
+      Name: !Sub "stc-myir-link-api-${EnvironmentType}"
       Description: "Link API to access MyIR from STC Partners Apps"
       Cors: "'*'"
       TracingEnabled: true

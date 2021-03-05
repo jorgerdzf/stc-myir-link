@@ -5,6 +5,32 @@ info:
   version: 0.0.1
 
 paths:
+  /test:
+    get:
+      tags:
+        - STC MyIR Link Services
+      description: Test if the endpoint is up and running.
+      responses:
+        "200":
+          description: 200 ok
+        "500":
+          description: 500 unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorDetail"
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TestFunction.Arn}/invocations
+        responses:
+          "200":
+            statusCode: "200"
+          "500":
+            statusCode: "500"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
   /account:
     post:
       tags:
@@ -35,6 +61,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AccountFunction.Arn}/invocations
+        responses:
+          "200":
+            statusCode: "200"
+          "400":
+            statusCode: "400"
+          "401":
+            statusCode: "401"
+          "500":
+            statusCode: "500"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
   /match:
     get:
       tags:
@@ -68,6 +110,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MatchFunction.Arn}/invocations
+        responses:
+          "200":
+            statusCode: "200"
+          "400":
+            statusCode: "400"
+          "401":
+            statusCode: "401"
+          "404":
+            statusCode: "404"
+          "500":
+            statusCode: "500"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
   /consent:
     post:
       tags:
@@ -98,6 +158,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConsentFunction.Arn}/invocations
+        responses:
+          "200":
+            statusCode: "200"
+          "400":
+            statusCode: "400"
+          "401":
+            statusCode: "401"
+          "500":
+            statusCode: "500"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
   /client:
     post:
       tags:
@@ -128,6 +204,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorDetail"
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ClientFunction.Arn}/invocations
+        responses:
+          "200":
+            statusCode: "200"
+          "400":
+            statusCode: "400"
+          "401":
+            statusCode: "401"
+          "500":
+            statusCode: "500"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws_proxy"
 components:
   schemas:
     NewUser:
